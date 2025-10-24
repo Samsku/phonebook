@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:ui": "rm -rf backend/dist && npm run build && cp -r ./dist ./backend/dist",
+    "deploy:full": "npm run build:ui && git add . && git commit -m \"uibuild\" && git push",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js"
