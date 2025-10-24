@@ -2,6 +2,7 @@ import express from "express"
 import morgan from "morgan"
 import path from "path"
 import { fileURLToPath } from "url"
+import Person from "./models/person.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -24,19 +25,42 @@ let persons = [
     { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
 ]
 
-app.get("/api/persons", (req, res) => res.json(persons))
-app.get("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(p => p.id === id)
-    person ? res.json(person) : res.status(404).end()
+
+app.get("/api/persons", (req, res) =>{
+    Person.find({}).then(persons => {
+        res.json(persons);
+    })
 })
+app.get("/api/persons/:id", async (req, res) => {
+    try {
+        const person = await Person.findById(req.params.id);
+        if (person) {
+            res.json(person);
+        } else {
+            res.status(404).send({ error: "Person not found" });
+        }
+    } catch (error) {
+        res.status(400).send({ error: "Malformed ID" });
+    }
+});
+
 app.post("/api/persons", (req, res) => {
-    const { name, number } = req.body
-    if (!name || !number) return res.status(400).json({ error: "Name or number missing" })
-    if (persons.find(p => p.name === name)) return res.status(400).json({ error: "Name must be unique" })
-    const person = { id: Math.floor(Math.random() * 1000000), name, number }
-    persons.push(person)
-    res.json(person)
+    const body = req.body;
+    if (!body.name || !body.number) {
+        return res.status(400).json({ error: "Name or number missing" });
+    }
+
+    const person = new Person({
+        name: body.name,
+        number: body.number,
+    })
+
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
+    .catch(error => {
+        res.status(400).json({ error: error.message })
+    })
 })
 app.delete("/api/persons/:id", (req, res) => {
     const id = Number(req.params.id)

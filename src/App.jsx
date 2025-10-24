@@ -81,9 +81,10 @@ const App = () => {
         }
     }
 
-    const filtered = persons.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-    )
+    const filtered = Array.isArray(persons)
+        ? persons.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+        : []
+
 
     return (
         <div className="container">
