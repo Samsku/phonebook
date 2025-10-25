@@ -4,7 +4,7 @@ import FilterSearch from './components/FilterSearch'
 import PersonForm from './components/PersonForm'
 import NumbersDisplay from './components/NumbersDisplay'
 
-const apiBaseUrl = "/api"
+const apiBaseUrl = "http://localhost:3001/api"
 
 const Notification = ({ message, error }) => {
     if (!message && !error) return null
