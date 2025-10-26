@@ -4,8 +4,6 @@ import FilterSearch from './components/FilterSearch'
 import PersonForm from './components/PersonForm'
 import NumbersDisplay from './components/NumbersDisplay'
 
-const apiBaseUrl = "/api";
-
 const Notification = ({ message, error }) => {
     if (!message && !error) return null
     return (
@@ -24,7 +22,7 @@ const App = () => {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        axios.get(`${apiBaseUrl}/persons`)
+        axios.get("/persons")
             .then(res => setPersons(res.data))
             .catch(() => showError("Failed to load data"))
     }, [])
@@ -45,14 +43,14 @@ const App = () => {
         const newPerson = { name: newName, number: newNumber }
 
         if (existing) {
-            axios.put(`${apiBaseUrl}/persons/${existing.id}`, newPerson)
+            axios.put(`/persons/${existing.id}`, newPerson)
                 .then(res => {
                     setPersons(persons.map(p => p.id !== existing.id ? p : res.data))
                     showNotification(`Updated ${newName}`)
                 })
                 .catch(() => showError(`Failed to update ${newName}`))
         } else {
-            axios.post(`${apiBaseUrl}/persons`, newPerson)
+            axios.post("/persons", newPerson)
                 .then(res => {
                     setPersons(persons.concat(res.data))
                     showNotification(`Added ${newName}`)
@@ -66,7 +64,7 @@ const App = () => {
 
     const deletePerson = (id) => {
         const personName = persons.find(p => p.id === id).name;
-        axios.delete(`${apiBaseUrl}/persons/${id}`)
+        axios.delete(`/persons/${id}`)
             .then(() => {
                 if (window.confirm(`Delete ${personName}?`)) {
                     setPersons(persons.filter(p => p.id !== id))
