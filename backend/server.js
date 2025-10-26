@@ -25,12 +25,12 @@ app.get("/info", (req, res) => {
     })
 })
 
-app.get("/api/persons", (req, res) =>{
+app.get("/persons", (req, res) =>{
     Person.find({}).then(persons => {
         res.json(persons);
     })
 })
-app.get("/api/persons/:id", async (req, res, next) => {
+app.get("/persons/:id", async (req, res, next) => {
     Person.findById(req.params.id)
         .then(note => {
             if (note) res.json(note);
@@ -42,7 +42,7 @@ app.get("/api/persons/:id", async (req, res, next) => {
         })
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/persons", (req, res) => {
     const body = req.body;
     if (!body.name || !body.number) {
         return res.status(400).json({ error: "Name or number missing" });
@@ -61,7 +61,7 @@ app.post("/api/persons", (req, res) => {
     })
 })
 
-app.put("/api/persons/:id", (req, res, next) => {
+app.put("/persons/:id", (req, res, next) => {
     const body = req.body;
     Person.findByIdAndUpdate(req.params.id, body, {new: true})
         .then(updatedPerson => {
@@ -73,7 +73,7 @@ app.put("/api/persons/:id", (req, res, next) => {
         })
 })
 
-app.delete("/api/persons/:id", (req, res, next) => {
+app.delete("/persons/:id", (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
         .then(() => {
             res.status(204).end();
