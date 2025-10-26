@@ -4,7 +4,7 @@ import FilterSearch from './components/FilterSearch'
 import PersonForm from './components/PersonForm'
 import NumbersDisplay from './components/NumbersDisplay'
 
-const apiBaseUrl = "/api"
+const apiBaseUrl = "/api";
 
 const Notification = ({ message, error }) => {
     if (!message && !error) return null
@@ -57,7 +57,7 @@ const App = () => {
                     setPersons(persons.concat(res.data))
                     showNotification(`Added ${newName}`)
                 })
-                .catch(() => showError("Failed to add person"))
+                .catch(err => showError(err.response.data.error))
         }
 
         setNewName('')
@@ -65,20 +65,17 @@ const App = () => {
     }
 
     const deletePerson = (id) => {
-        const person = persons.find(p => p.id === id)
-        if (!person) return
-
-        if (window.confirm(`Delete ${person.name}?`)) {
-            axios.delete(`${apiBaseUrl}/persons/${id}`)
-                .then(() => {
+        const personName = persons.find(p => p.id === id).name;
+        axios.delete(`${apiBaseUrl}/persons/${id}`)
+            .then(() => {
+                if (window.confirm(`Delete ${personName}?`)) {
                     setPersons(persons.filter(p => p.id !== id))
-                    showNotification(`Deleted ${person.name}`)
-                })
-                .catch(() => {
-                    showError(`Person ${person.name} not found`)
-                    setPersons(persons.filter(p => p.id !== id))
-                })
-        }
+                    showNotification(`Deleted ${personName}`)
+                } else {
+                    showError(`${personName} was not deleted!`)
+                }
+            })
+            .catch(() => showError(`Failed to delete ${personName}`))
     }
 
     const filtered = Array.isArray(persons)

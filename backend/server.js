@@ -1,5 +1,6 @@
 import express from "express"
 import morgan from "morgan"
+import cors from "cors"
 import path from "path"
 import { fileURLToPath } from "url"
 import Person from "./models/person.js"
@@ -11,37 +12,34 @@ const app = express()
 
 // Middleware
 app.use(express.json())
+app.use(cors())
 morgan.token("body", (req) => JSON.stringify(req.body))
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"))
 
 // Serve frontend static files first
 app.use(express.static(path.join(__dirname, "../dist")))
 
-// Phonebook API
-let persons = [
-    { id: 1, name: "Arto Hellas", number: "040-123456" },
-    { id: 2, name: "Ada Lovelace", number: "39-44-5323523" },
-    { id: 3, name: "Dan Abramov", number: "12-43-234345" },
-    { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
-]
-
+app.get("/info", (req, res) => {
+    Person.countDocuments().then(count => {
+        res.send(`<p style="font-size: 1.2rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: green">Phonebook has info for ${count} people</p>`)
+    })
+})
 
 app.get("/api/persons", (req, res) =>{
     Person.find({}).then(persons => {
         res.json(persons);
     })
 })
-app.get("/api/persons/:id", async (req, res) => {
-    try {
-        const person = await Person.findById(req.params.id);
-        if (person) {
-            res.json(person);
-        } else {
-            res.status(404).send({ error: "Person not found" });
-        }
-    } catch (error) {
-        res.status(400).send({ error: "Malformed ID" });
-    }
+app.get("/api/persons/:id", async (req, res, next) => {
+    Person.findById(req.params.id)
+        .then(note => {
+            if (note) res.json(note);
+            else res.status(404).end();
+        })
+        .catch(error => {
+            console.log(error);
+            next(error);
+        })
 });
 
 app.post("/api/persons", (req, res) => {
@@ -62,10 +60,28 @@ app.post("/api/persons", (req, res) => {
         res.status(400).json({ error: error.message })
     })
 })
-app.delete("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(p => p.id !== id)
-    res.status(204).end()
+
+app.put("/api/persons/:id", (req, res, next) => {
+    const body = req.body;
+    Person.findByIdAndUpdate(req.params.id, body, {new: true})
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+        })
+        .catch(error => {
+            console.log(error);
+            next(error);
+        })
+})
+
+app.delete("/api/persons/:id", (req, res, next) => {
+    Person.findByIdAndDelete(req.params.id)
+        .then(() => {
+            res.status(204).end();
+        })
+        .catch(error => {
+            console.log(error);
+            next(error);
+        })
 })
 
 // Fallback for React Router — serve index.html for non-API GET requests
@@ -76,6 +92,14 @@ app.use((req, res, next) => {
         next();
     }
 });
+
+// Error handler
+const errorHandler = (error, req, res, next) => {
+    console.error(error)
+    res.status(500).json({ error: error.message })
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
